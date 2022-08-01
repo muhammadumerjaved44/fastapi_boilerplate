@@ -9,7 +9,7 @@ class Config:
 
     pass
 
-    PROJECT_NAME = config("PROJECT_NAME")
+    PROJECT_NAME = config("PROJECT_NAME") + "_APi"
 
 
 class DevConfig(Config):
