@@ -14,6 +14,12 @@ class Config:
 
 class DevConfig(Config):
     ENV = "development"
+    DB_DRIVER = config("DB_DRIVER")
+    DB_USER = config("DB_USER")
+    DB_PASSWORD = config("DB_PASSWORD")
+    DB_HOST = config("DB_HOST")
+    DB_PORT = config("DB_PORT", cast=int)
+    DATABASE_NAME = config("DATABASE_NAME")
 
 
 class TestConfig(Config):
