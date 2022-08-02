@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+python-decouple
+SQLAlchemy
+PyMySQL
+alembic
