@@ -14,20 +14,24 @@ class Config:
 
 class DevConfig(Config):
     ENV = "development"
+    DEBUG = True
     DB_DRIVER = config("DB_DRIVER")
     DB_USER = config("DB_USER")
     DB_PASSWORD = config("DB_PASSWORD")
     DB_HOST = config("DB_HOST")
     DB_PORT = config("DB_PORT", cast=int)
     DATABASE_NAME = config("DATABASE_NAME")
+    API_PORT_DOCKER = config("API_PORT_DOCKER", cast=int)
 
 
 class TestConfig(Config):
     ENV = "testing"
+    DEBUG = False
 
 
 class ProdConfig(Config):
     ENV = "production"
+    DEBUG = False
 
 
 def get_settings():

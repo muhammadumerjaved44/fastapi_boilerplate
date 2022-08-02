@@ -7,5 +7,6 @@ class MessageTemplate(Base):
     __tablename__ = "message_template"
 
     id = Column(Integer, primary_key=True, index=True)
-    message = Column(String(50), nullable=False)
+    subject = Column(String(100), nullable=False)
+    message = Column(String(1000), nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)

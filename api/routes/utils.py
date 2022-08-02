@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+import models
 
 router = APIRouter()
 

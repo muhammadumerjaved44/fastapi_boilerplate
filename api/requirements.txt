@@ -2,5 +2,5 @@ fastapi
 uvicorn
 python-decouple
 SQLAlchemy
-mysqlclient
+PyMySQL
 alembic
