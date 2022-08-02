@@ -22,6 +22,8 @@ class DevConfig(Config):
     DB_PORT = config("DB_PORT", cast=int)
     DATABASE_NAME = config("DATABASE_NAME")
     API_PORT_DOCKER = config("API_PORT_DOCKER", cast=int)
+    ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", cast=int)
+    SECRET_KEY = config("SECRET_KEY")
 
 
 class TestConfig(Config):
