@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from routes import utils, auth
+from routes import utils, auth, users
 from config import settings
 from uvicorn.config import LOGGING_CONFIG
 from db.session import engine, Base
@@ -15,6 +15,8 @@ Base.metadata.create_all(bind=engine)
 # routes
 app.include_router(utils.router, prefix="/utils", tags=["utils"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(users.router, prefix="/users", tags=["users"])
+
 
 
 # CORS
