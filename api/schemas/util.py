@@ -3,8 +3,7 @@ from pydantic import BaseModel
 
 class RequestDemoIn(BaseModel):
     email: str
-    first_name: str
-    last_name: str
+    name: str
     phone_number: str
     job_title: str
     institute: str
@@ -13,8 +12,7 @@ class RequestDemoIn(BaseModel):
         schema_extra = {
             "example": {
                 "email": "admin@mail.com",
-                "first_name": "John",
-                "last_name": "Alexander",
+                "name": "John Alexander",
                 "phone_number": "12345678912",
                 "job_title": "Administrator",
                 "institute": "University of Houston",
