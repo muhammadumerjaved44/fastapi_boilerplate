@@ -4,6 +4,7 @@ from routes import utils, auth
 from config import settings
 from uvicorn.config import LOGGING_CONFIG
 from db.session import engine, Base
+from fastapi.middleware.cors import CORSMiddleware
 
 # declaring FastAPI app
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -15,6 +16,15 @@ Base.metadata.create_all(bind=engine)
 app.include_router(utils.router, prefix="/utils", tags=["utils"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 if __name__ == "__main__":
 

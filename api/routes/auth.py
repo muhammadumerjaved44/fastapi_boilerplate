@@ -10,9 +10,9 @@ router = APIRouter()
 
 
 @router.post("/login", response_model=LoginOut)
-def login(auth_details: LoginIn, db: Session = Depends(get_db)):
+async def login(auth_details: LoginIn, db: Session = Depends(get_db)):
 
-    # getting user
+    #### replace with crud
     user = db.query(User).filter(User.email == auth_details.email).first()
 
     # checking if user not found or password is invalid
