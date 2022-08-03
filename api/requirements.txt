@@ -6,3 +6,4 @@ PyMySQL
 alembic
 pyjwt
 passlib
+email-validator
