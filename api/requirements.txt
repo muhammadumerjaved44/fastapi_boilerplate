@@ -4,3 +4,5 @@ python-decouple
 SQLAlchemy
 PyMySQL
 alembic
+pyjwt
+passlib
