@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 import models
-from auth import auth_handler
+import auth
 
 router = APIRouter()
 
@@ -16,6 +16,6 @@ def ping():
 @router.get("/hash_password")
 def ping(password: str):
 
-    hashed_password = auth_handler.get_password_hash(password)
+    hashed_password = auth.get_password_hash(password)
     response: dict = {"hashed_password": hashed_password}
     return response
