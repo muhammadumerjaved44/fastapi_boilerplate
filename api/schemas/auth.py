@@ -6,12 +6,7 @@ class LoginIn(BaseModel):
     password: str
 
     class Config:
-        schema_extra = {
-            "example": {
-                "email": "admin@mail.com",
-                "password": "password",
-            }
-        }
+        schema_extra = {"example": {"email": "admin@mail.com", "password": "password",}}
 
 
 class LoginOut(BaseModel):

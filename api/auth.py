@@ -49,8 +49,7 @@ def auth_wrapper(auth: HTTPAuthorizationCredentials = Security(security)):
 
 
 def get_current_user(
-    user_id: int = Depends(auth_wrapper),
-    db: Session = Depends(get_db),
+    user_id: int = Depends(auth_wrapper), db: Session = Depends(get_db),
 ) -> User:
 
     ##### replace with crud
@@ -60,9 +59,7 @@ def get_current_user(
     return user
 
 
-def get_current_active_user(
-    current_user: User = Depends(get_current_user),
-) -> User:
+def get_current_active_user(current_user: User = Depends(get_current_user),) -> User:
     ##### replace with crud
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
