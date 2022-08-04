@@ -1,8 +1,5 @@
-from urllib3 import HTTPResponse
 from fastapi import HTTPException, Depends, APIRouter, status
-from schemas import LoginIn, LoginOut
 from sqlalchemy.orm import Session
-import auth
 from db.session import get_db
 from models import User
 from schemas import UserSchema, Users, AddUser, UserUpdateSchema
@@ -41,6 +38,7 @@ def addUser(user: AddUser, session: Session = Depends(get_db)):
     return "User Created Successfully"
 
 
+
 @router.put("/{id}")
 def updateUser(id: int, user: UserUpdateSchema, session: Session = Depends(get_db)):
     userObj = session.query(User).get(id)
@@ -61,3 +59,15 @@ def deleteUser(id: int, session: Session = Depends(get_db)):
     session.commit()
     session.close
     return userObj.first_name + "  deleted"
+
+
+@router.get("/{id}/contacts")
+def get_user_contacts(id: int, db: Session = Depends(get_db)):
+
+    user = db.query(User).get(id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    return user.contacts

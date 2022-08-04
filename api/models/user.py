@@ -1,5 +1,6 @@
 from sqlalchemy import Integer, String, Boolean
 from sqlalchemy.sql.schema import Column
+from sqlalchemy.orm import relationship
 from db.session import Base
 
 
@@ -13,3 +14,4 @@ class User(Base):
     last_name = Column(String(50))
     is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=False)
+    contacts = relationship("Contact")

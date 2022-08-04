@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends, APIRouter
+from fastapi import HTTPException, Depends, APIRouter, status
 from schemas import LoginIn, LoginOut
 from sqlalchemy.orm import Session
 import auth
@@ -19,7 +19,10 @@ async def login(auth_details: LoginIn, db: Session = Depends(get_db)):
     if (user is None) or (
         not auth.verify_password(auth_details.password, user.password)
     ):
-        raise HTTPException(status_code=401, detail="Invalid email and/or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email and/or password",
+        )
 
     # generating new token
     token = auth.encode_token(user.email)
