@@ -12,6 +12,6 @@ class User(Base):
     password = Column(String(255), nullable=False)
     first_name = Column(String(50))
     last_name = Column(String(50))
-    is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=False)
+    scope = Column(String(10))
     contacts = relationship("Contact")
