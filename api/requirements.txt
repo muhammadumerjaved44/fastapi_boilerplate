@@ -9,3 +9,4 @@ passlib
 email-validator
 python-jose
 python-multipart
+sendgrid
