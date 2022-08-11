@@ -1,6 +1,7 @@
 from decouple import config
 from pydantic import AnyHttpUrl
 import json
+from typing import List
 
 TEMP_ENV = config("ENV")
 
@@ -25,7 +26,7 @@ class DevConfig(Config):
     API_PORT_DOCKER = config("API_PORT_DOCKER", cast=int)
     ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", cast=int)
     SECRET_KEY = config("SECRET_KEY")
-    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = json.loads(config("BACKEND_CORS_ORIGINS"))
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = json.loads(config("BACKEND_CORS_ORIGINS"))
 
 
 class TestConfig(Config):

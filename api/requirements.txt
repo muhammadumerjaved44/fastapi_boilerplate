@@ -7,3 +7,5 @@ alembic
 pyjwt
 passlib
 email-validator
+python-jose
+python-multipart
