@@ -7,7 +7,7 @@ class AddUser(BaseModel):
     password: str
     first_name: str
     last_name: str
-    is_admin: bool
+    scope: str
     is_active: bool
 
 

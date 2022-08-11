@@ -1,3 +1,3 @@
-from .auth import LoginIn, LoginOut
+from .auth import LoginIn, LoginOut, Token, TokenData
 from .util import RequestDemoIn, RequestDemoOut
-from .user import UserSchema, Users, AddUser, UserUpdateSchema
+from .users import UserSchema, Users, AddUser, UserUpdateSchema
