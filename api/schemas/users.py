@@ -3,7 +3,7 @@ from typing import List
 
 
 class AddUser(BaseModel):
-    email: EmailStr
+    username: EmailStr
     password: str
     first_name: str
     last_name: str
