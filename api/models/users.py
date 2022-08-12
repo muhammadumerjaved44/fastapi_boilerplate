@@ -15,3 +15,5 @@ class User(Base):
     is_active = Column(Boolean, default=False)
     scope = Column(String(10))
     contacts = relationship("Contact")
+    contact_csvs = relationship("ContactCSV")
+    campaigns = relationship("Campaign")

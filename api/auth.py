@@ -22,7 +22,7 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="auth/token",
+    tokenUrl="auth/login",
     scopes={
         "superuser": "All access",
         "admin": "Read items",
@@ -85,7 +85,7 @@ def authenticate_user(username: str, password: str, db: Session):
 
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
-    """create acces token 
+    """create acces token
 
     Args:
         data (dict): data
@@ -109,15 +109,15 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ):
-    """get current user after authorization 
+    """get current user after authorization
 
     Args:
         security_scopes (SecurityScopes): for using scopes
-        token (str, optional): token 
+        token (str, optional): token
         db (Session, optional): database connection
 
     Raises:
-        credentials_exception: 401, not validate credentials 
+        credentials_exception: 401, not validate credentials
         credentials_exception: _description_
         credentials_exception: _description_
         HTTPException: 401, not enough permissions
@@ -161,7 +161,7 @@ async def get_current_user(
 async def get_current_active_user(
     current_user: AddUser = Security(get_current_user, scopes=[])
 ):
-    """for cehcking active user 
+    """for cehcking active user
 
     Args:
         current_user (AddUser, optional): for checking scope
@@ -170,7 +170,7 @@ async def get_current_active_user(
         HTTPException: 400, not active
 
     Returns:
-        _type_: current_user 
+        _type_: current_user
     """
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")

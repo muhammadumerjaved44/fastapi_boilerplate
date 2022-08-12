@@ -1,8 +1,17 @@
 from fastapi import HTTPException, Depends, APIRouter, status, HTTPException, Security
 from sqlalchemy.orm import Session
+import sqlalchemy
 from db.session import get_db
+import auth
 from models import User
-from schemas import UserSchema, Users, AddUser, UserUpdateSchema
+from schemas import (
+    UserSchema,
+    Users,
+    AddUser,
+    UserUpdateSchema,
+    Contacts,
+    GetCampaignOut,
+)
 from auth import get_current_active_user, get_password_hash
 
 router = APIRouter()
@@ -14,7 +23,7 @@ def userById(
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """"
+    """ "
         get user by id
     Args:
         id (int): user_id
@@ -24,7 +33,7 @@ def userById(
         HTTPException: 404, user not found
 
     Returns:
-        _type_: instant user by id 
+        _type_: instant user by id
     """
     user = session.query(User).get(id)
     if user is None:
@@ -34,7 +43,8 @@ def userById(
 
 
 @router.get(
-    "/", response_model=Users,
+    "/",
+    response_model=Users,
 )
 def userList(
     session: Session = Depends(get_db),
@@ -49,7 +59,6 @@ def userList(
         _type_: all users list
     """
     users = session.query(User).all()
-    response: UserSchema = users
     response: Users = Users(users=users)
     return response
 
@@ -63,7 +72,7 @@ def addUser(
     """for adding new user
 
     Args:
-        user (AddUser): user schema 
+        user (AddUser): user schema
         session (Session, optional):  database connection
         current_user (User, optional): for authentication and authorization
 
@@ -80,7 +89,7 @@ def addUser(
         session.add(userObj)
         session.commit()
         session.refresh(userObj)
-    except Exception:
+    except sqlalchemy.exc.IntegrityError:
         raise HTTPException(status_code=400, detail="Email Already exists")
     return "User Created Successfully"
 
@@ -92,7 +101,7 @@ def updateUser(
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """update 
+    """update
 
     Args:
         id (int): take id for updating user
@@ -126,7 +135,7 @@ def deleteUser(
         session (Session, optional): database connection
 
     Raises:
-        HTTPException: 404, user not found 
+        HTTPException: 404, user not found
 
     Returns:
         _type_: return deleted user name + deleted message
@@ -140,27 +149,29 @@ def deleteUser(
     return userObj.first_name + "  deleted"
 
 
-@router.get("/{id}/contacts")
-def get_user_contacts(
-    db: Session = Depends(get_db),
+@router.get("/me/contacts", response_model=Contacts)
+def get_current_user_contacts(
     current_user: User = Security(get_current_active_user, scopes=["user"]),
 ):
-    """get user contact
 
-    Args:
-        id (int): take id for instant user
-        db (Session, optional): database connection
-
-    Raises:
-        HTTPException: 404, user not found 
-
-    Returns:
-        _type_: user contacts
-    """
-    user = db.query(User).get(current_user.id)
-    if not user:
+    if not current_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    return user.contacts
+    response: Contacts = Contacts(contacts=current_user.contacts)
+    return response
+
+
+@router.get("/me/campaigns", response_model=GetCampaignOut)
+def get_current_user_campaigns(
+    current_user: User = Depends(auth.get_current_active_user),
+):
+
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    response: GetCampaignOut = GetCampaignOut(campaigns=current_user.campaigns)
+    return response
