@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from db.session import get_db
 from models import User
 from schemas import UserSchema, Users, AddUser, UserUpdateSchema
-from auth import get_current_active_user
+from auth import get_current_active_user, get_password_hash
 
 router = APIRouter()
 
@@ -74,7 +74,7 @@ def addUser(
         _type_: pass successful created string
     """
     try:
-        password = auth.get_password_hash(user.password)
+        password = get_password_hash(user.password)
         user.password = password
         userObj = User(**user.dict())
         session.add(userObj)
