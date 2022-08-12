@@ -1,16 +1,19 @@
-from fastapi import HTTPException, Depends, APIRouter, status
+from fastapi import HTTPException, Depends, APIRouter, status, HTTPException, Security
 from sqlalchemy.orm import Session
 from db.session import get_db
 from models import User
 from schemas import UserSchema, Users, AddUser, UserUpdateSchema
-import auth
-from .auth import *
+from auth import get_current_active_user
 
 router = APIRouter()
 
 
 @router.get("/{id}", response_model=UserSchema)
-def userById(id: int, session: Session = Depends(get_db)):
+def userById(
+    id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
+):
     """"
         get user by id
     Args:
@@ -30,8 +33,13 @@ def userById(id: int, session: Session = Depends(get_db)):
     return response
 
 
-@router.get("/", response_model=Users)
-def userList(session: Session = Depends(get_db)):
+@router.get(
+    "/", response_model=Users,
+)
+def userList(
+    session: Session = Depends(get_db),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
+):
     """get all users list
 
     Args:
@@ -78,7 +86,12 @@ def addUser(
 
 
 @router.put("/{id}")
-def updateUser(id: int, session: Session = Depends(get_db)):
+def updateUser(
+    id: int,
+    user: UserUpdateSchema,
+    session: Session = Depends(get_db),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
+):
     """update 
 
     Args:
@@ -97,11 +110,15 @@ def updateUser(id: int, session: Session = Depends(get_db)):
     userObj.first_name = user.first_name
     userObj.last_name = user.last_name
     session.commit()
-    return userObj
+    return {"msg": "user updated"}
 
 
 @router.delete("/{id}")
-def deleteUser(id: int, session: Session = Depends(get_db)):
+def deleteUser(
+    id: int,
+    session: Session = Depends(get_db),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
+):
     """delete user
 
     Args:
@@ -124,7 +141,10 @@ def deleteUser(id: int, session: Session = Depends(get_db)):
 
 
 @router.get("/{id}/contacts")
-def get_user_contacts(id: int, db: Session = Depends(get_db)):
+def get_user_contacts(
+    db: Session = Depends(get_db),
+    current_user: User = Security(get_current_active_user, scopes=["user"]),
+):
     """get user contact
 
     Args:
@@ -137,7 +157,7 @@ def get_user_contacts(id: int, db: Session = Depends(get_db)):
     Returns:
         _type_: user contacts
     """
-    user = db.query(User).get(id)
+    user = db.query(User).get(current_user.id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
