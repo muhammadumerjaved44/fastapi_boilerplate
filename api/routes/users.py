@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 from db.session import get_db
 from models import User
 from schemas import UserSchema, Users, AddUser, UserUpdateSchema
-import auth
-
+from auth import get_current_active_user
 
 router = APIRouter()
 
@@ -13,7 +12,7 @@ router = APIRouter()
 def userById(
     id: int,
     session: Session = Depends(get_db),
-    current_user: User = Security(auth.get_current_active_user, scopes=["superuser"]),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
     """"
         get user by id
@@ -39,7 +38,7 @@ def userById(
 )
 def userList(
     session: Session = Depends(get_db),
-    current_user: User = Security(auth.get_current_active_user, scopes=["superuser"]),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
     """get all users list
 
@@ -59,7 +58,7 @@ def userList(
 def addUser(
     user: AddUser,
     session: Session = Depends(get_db),
-    current_user: User = Security(auth.get_current_active_user, scopes=["superuser"]),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
     """for adding new user
 
@@ -91,7 +90,7 @@ def updateUser(
     id: int,
     user: UserUpdateSchema,
     session: Session = Depends(get_db),
-    current_user: User = Security(auth.get_current_active_user, scopes=["superuser"]),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
     """update 
 
@@ -118,7 +117,7 @@ def updateUser(
 def deleteUser(
     id: int,
     session: Session = Depends(get_db),
-    current_user: User = Security(auth.get_current_active_user, scopes=["superuser"]),
+    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
     """delete user
 
@@ -144,7 +143,7 @@ def deleteUser(
 @router.get("/{id}/contacts")
 def get_user_contacts(
     db: Session = Depends(get_db),
-    current_user: User = Security(auth.get_current_active_user, scopes=["user"]),
+    current_user: User = Security(get_current_active_user, scopes=["user"]),
 ):
     """get user contact
 

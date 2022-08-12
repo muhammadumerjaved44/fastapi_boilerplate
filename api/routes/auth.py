@@ -7,7 +7,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from fastapi.security import (
     OAuth2PasswordRequestForm,
 )
-import auth
+from auth import authenticate_user, create_access_token
 
 router = APIRouter()
 
@@ -28,12 +28,12 @@ async def login_for_access_token(
     Returns:
         _type_: access token and type
     """
-    user = auth.authenticate_user(form_data.username, form_data.password, db)
+    user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    access_token = auth.create_access_token(
+    access_token = create_access_token(
         data={"sub": user.email, "scopes": user.scope},
         expires_delta=access_token_expires,
     )
