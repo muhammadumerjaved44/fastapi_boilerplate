@@ -29,6 +29,10 @@ class DevConfig(Config):
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = json.loads(config("BACKEND_CORS_ORIGINS"))
     STELLO_EMAIL = config("STELLO_EMAIL")
     SENDGRID_API_KEY = config("SENDGRID_API_KEY")
+    S3_ACCESS_KEY_ID = config("S3_ACCESS_KEY_ID")
+    S3_SECRET_ACCESS_KEY = config("S3_SECRET_ACCESS_KEY")
+    S3_CSV_BUCKET = config("S3_CSV_BUCKET")
+    S3_CSV_FOLDER = config("S3_CSV_FOLDER")
 
 
 class TestConfig(Config):

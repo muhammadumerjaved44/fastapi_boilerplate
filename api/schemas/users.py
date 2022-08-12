@@ -1,9 +1,10 @@
 from pydantic import BaseModel, EmailStr
 from typing import List
+from datetime import datetime
 
 
 class AddUser(BaseModel):
-    username: EmailStr
+    email: EmailStr
     password: str
     first_name: str
     last_name: str
@@ -28,3 +29,17 @@ class Users(BaseModel):
 class UserUpdateSchema(BaseModel):
     first_name: str
     last_name: str
+
+
+class CampaignSchema(BaseModel):
+    via_sms: bool
+    via_email: bool
+    audience_number: int
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class GetCampaignOut(BaseModel):
+    campaigns: list[CampaignSchema]

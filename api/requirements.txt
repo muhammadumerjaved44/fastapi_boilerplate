@@ -8,5 +8,7 @@ pyjwt
 passlib
 email-validator
 python-jose
-python-multipart
 sendgrid
+python-multipart
+boto3
+pandas
