@@ -209,7 +209,7 @@ def broadcast_message(
                 subject=message_details.subject,
             )
         response: BroadcastMessageOut = BroadcastMessageOut(
-            message="email broadcast in queue"
+            message="Email broadcasting in queue"
         )
         return response
     else:

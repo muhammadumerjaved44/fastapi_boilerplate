@@ -1,4 +1,3 @@
-from email_validator import validate_email, EmailNotValidError
 from fastapi import (
     APIRouter,
     HTTPException,
@@ -24,10 +23,7 @@ from models import User, Contact, MessageTemplate
 import pydantic
 from db.session import get_db
 from sqlalchemy.orm import Session
-from background_tasks import upload_csv_to_s3, save_csv_contacts
-import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import *
+from background_tasks import upload_csv_to_s3, save_csv_contacts, send_email
 from config import settings
 
 
@@ -42,8 +38,11 @@ async def ping():
     return response
 
 
-@router.post("/request_demo")
-async def request_demo(user_details: RequestDemoIn):
+@router.post("/request_demo", response_model=RequestDemoOut)
+async def request_demo(
+    user_details: RequestDemoIn,
+    background_tasks: BackgroundTasks,
+):
     """setup endpoint for client data email
 
     Args:
@@ -52,15 +51,16 @@ async def request_demo(user_details: RequestDemoIn):
     Returns:
         _type_: dictionary
     """
-    msg = f"Email : {user_details.email} \nName : {user_details.name}\nPhone_Number  : {user_details.phone_number}\nJob_Title : {user_details.job_title}\nInstitute : {user_details.institute}"
-    sg = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
-    from_email = Email(settings.STELLO_EMAIL)
-    to_email = To(settings.STELLO_EMAIL)
-    subject = "Stello Demo Request"
-    content = Content("text/plain", msg)
-    mail = Mail(from_email, to_email, subject, content)
-    response = sg.client.mail.send.post(request_body=mail.get())
-    return {"message": "Mail sent"}
+    message = f"Email : {user_details.email} \nName : {user_details.name}\nPhone_Number  : {user_details.phone_number}\nJob_Title : {user_details.job_title}\nInstitute : {user_details.institute}"
+
+    background_tasks.add_task(
+        send_email,
+        to_email=settings.STELLO_EMAIL,
+        subject="Stello Demo Request",
+        message=message,
+    )
+    response: RequestDemoOut = RequestDemoOut(message="Email successfully queued")
+    return response
 
 
 @router.get("/message-tags", response_model=MessageTagsOut)

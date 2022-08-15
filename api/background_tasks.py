@@ -74,3 +74,11 @@ def broadcast_emails(emails: list[str], message: str, subject: str):
         sendgrid_response = sendgrid_client.client.mail.send.post(
             request_body=mail.get()
         )
+
+
+def send_email(to_email: str, subject: str, message: str):
+    from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
+    to_email = sendgrid_mail_helper.To(to_email)
+    content = sendgrid_mail_helper.Content("text/plain", f"{message}")
+    mail = sendgrid_mail_helper.Mail(from_email, to_email, subject, content)
+    sendgrid_response = sendgrid_client.client.mail.send.post(request_body=mail.get())
