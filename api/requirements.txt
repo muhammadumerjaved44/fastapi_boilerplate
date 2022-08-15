@@ -6,7 +6,6 @@ PyMySQL
 alembic
 pyjwt
 passlib
-email-validator
 python-jose
 sendgrid
 python-multipart

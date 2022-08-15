@@ -10,8 +10,11 @@ from .util import (
 from .users import (
     UserSchema,
     Users,
-    AddUser,
-    UserUpdateSchema,
+    CreateUserIn,
+    CreateUserOut,
+    UpdateUserIn,
+    UpdateUserOut,
+    DeleteUserOut,
     GetCampaignOut,
     BroadcastMessageOut,
     BroadcastMessageIn,

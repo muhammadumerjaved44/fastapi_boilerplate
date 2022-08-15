@@ -3,7 +3,7 @@ from typing import List, Union
 from db.session import get_db
 from config import settings
 from models import User
-from schemas import AddUser, TokenData, Token
+from schemas import CreateUserIn, TokenData
 from sqlalchemy.orm import Session
 
 from fastapi import Depends, APIRouter, HTTPException, Security, status
@@ -159,7 +159,7 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: AddUser = Security(get_current_user, scopes=[])
+    current_user: CreateUserIn = Security(get_current_user, scopes=[])
 ):
     """for cehcking active user
 

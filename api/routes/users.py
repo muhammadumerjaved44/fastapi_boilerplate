@@ -15,8 +15,11 @@ from models import User, Campaign
 from schemas import (
     UserSchema,
     Users,
-    AddUser,
-    UserUpdateSchema,
+    CreateUserIn,
+    CreateUserOut,
+    UpdateUserIn,
+    UpdateUserOut,
+    DeleteUserOut,
     Contacts,
     GetCampaignOut,
     BroadcastMessageOut,
@@ -29,22 +32,20 @@ router = APIRouter()
 
 
 @router.get("/{id}", response_model=UserSchema)
-def userById(
+def get_user_by_id(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """ "
-        get user by id
+    """get user by id
     Args:
-        id (int): user_id
-        session (Session, optional): database connection
+        id (user's id): int
 
     Raises:
         HTTPException: 404, user not found
 
     Returns:
-        _type_: instant user by id
+        UserSchema: instance of user by id
     """
     user = session.query(User).get(id)
     if user is None:
@@ -57,35 +58,38 @@ def userById(
     "/",
     response_model=Users,
 )
-def userList(
+def get_all_users(
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
     """get all users list
 
     Args:
-        session (Session, optional): database connection
+        None
 
     Returns:
-        _type_: all users list
+        Users: all users list
     """
     users = session.query(User).all()
     response: Users = Users(users=users)
     return response
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
-def addUser(
-    user: AddUser,
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CreateUserOut)
+def create_user(
+    user: CreateUserIn,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """for adding new user
+    """create new user
 
     Args:
-        user (AddUser): user schema
-        session (Session, optional):  database connection
-        current_user (User, optional): for authentication and authorization
+        email: str
+        password: str
+        first_name: str
+        last_name: str
+        scope: str
+        is_active: bool
 
     Raises:
         HTTPException: 400, Email Already exists
@@ -102,21 +106,22 @@ def addUser(
         session.refresh(userObj)
     except sqlalchemy.exc.IntegrityError:
         raise HTTPException(status_code=400, detail="Email Already exists")
-    return "User Created Successfully"
+
+    response: CreateUserOut = CreateUserOut(message="User Created Successfully")
+    return response
 
 
-@router.put("/{id}")
-def updateUser(
+@router.put("/{id}", response_model=UpdateUserOut)
+def update_user(
     id: int,
-    user: UserUpdateSchema,
+    user: UpdateUserIn,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """update
+    """update user by id
 
     Args:
-        id (int): take id for updating user
-        session (Session, optional): database connection
+        id (id for updating user): int
 
     Raises:
         HTTPException: 404, user not found
@@ -130,11 +135,13 @@ def updateUser(
     userObj.first_name = user.first_name
     userObj.last_name = user.last_name
     session.commit()
-    return {"msg": "user updated"}
+
+    response: UpdateUserOut = UpdateUserOut(message="user updated")
+    return response
 
 
-@router.delete("/{id}")
-def deleteUser(
+@router.delete("/{id}", response_model=DeleteUserOut)
+def delete_user(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
@@ -157,18 +164,25 @@ def deleteUser(
     session.delete(userObj)
     session.commit()
     session.close
-    return userObj.first_name + "  deleted"
+
+    response: UpdateUserOut = UpdateUserOut(
+        message=f"user with id: {userObj.first_name} deleted"
+    )
+    return response
 
 
 @router.get("/me/contacts", response_model=Contacts)
 def get_current_user_contacts(
     current_user: User = Security(get_current_active_user, scopes=["user"]),
 ):
+    """Get contacts of current user
 
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+    Args:
+        None
+
+    Returns:
+        Contacts: list of contacts
+    """
 
     response: Contacts = Contacts(contacts=current_user.contacts)
     return response
@@ -178,11 +192,14 @@ def get_current_user_contacts(
 def get_current_user_campaigns(
     current_user: User = Security(auth.get_current_active_user, scopes=["user"]),
 ):
+    """Get campaigns of current user
 
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+    Args:
+        None
+
+    Returns:
+        Campaigns: list of campaings
+    """
 
     response: GetCampaignOut = GetCampaignOut(campaigns=current_user.campaigns)
     return response
@@ -195,10 +212,21 @@ def broadcast_message(
     db: Session = Depends(get_db),
     current_user: User = Security(auth.get_current_active_user, scopes=["user"]),
 ):
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+    """Broadcast message by email and/or sms
+
+    Args:
+        is_sms (bool): should it send message through SMS/MMS
+        is_email (bool): should it send message through Email
+        subject (string): Subject of the Email
+        message (string): Message contect with tags
+        emails (list of strings): list of emails of reciepent contacts
+
+    Raises:
+        HTTPException: 400 if both of the "is_sms" or "is_email" fields are false
+
+    Returns:
+        BroadcastMessageOut: success message
+    """
 
     # one of the fields should be true
     if not (message_details.is_email or message_details.is_sms):
