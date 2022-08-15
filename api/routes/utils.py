@@ -56,7 +56,7 @@ async def request_demo(user_details: RequestDemoIn):
     sg = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
     from_email = Email(settings.STELLO_EMAIL)
     to_email = To(settings.STELLO_EMAIL)
-    subject = "User Details"
+    subject = "Stello Demo Request"
     content = Content("text/plain", msg)
     mail = Mail(from_email, to_email, subject, content)
     response = sg.client.mail.send.post(request_body=mail.get())

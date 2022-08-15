@@ -47,7 +47,7 @@ def save_csv_contacts(user_id: int, contacts: Contacts):
         for record in contacts:
             instance = (
                 db.query(Contact)
-                .filter_by(preferred_email=record.preferred_email)
+                .filter_by(preferred_email=record.preferred_email, user_id=user_id)
                 .one_or_none()
             )
             if instance:
