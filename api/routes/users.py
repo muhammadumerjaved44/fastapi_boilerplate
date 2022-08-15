@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 import sqlalchemy
 from db.session import get_db
 import auth
-from models import User
+from models import User, Campaign
 from schemas import (
     UserSchema,
     Users,
@@ -176,7 +176,7 @@ def get_current_user_contacts(
 
 @router.get("/me/campaigns", response_model=GetCampaignOut)
 def get_current_user_campaigns(
-    current_user: User = Depends(auth.get_current_active_user),
+    current_user: User = Security(auth.get_current_active_user, scopes=["user"]),
 ):
 
     if not current_user:
@@ -192,28 +192,41 @@ def get_current_user_campaigns(
 def broadcast_message(
     message_details: BroadcastMessageIn,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db),
+    current_user: User = Security(auth.get_current_active_user, scopes=["user"]),
 ):
-
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    if message_details.is_email or message_details.is_sms:
-        if message_details.is_email:
-            background_tasks.add_task(
-                broadcast_emails,
-                emails=message_details.emails,
-                message=message_details.message,
-                subject=message_details.subject,
-            )
-        response: BroadcastMessageOut = BroadcastMessageOut(
-            message="Email broadcasting in queue"
-        )
-        return response
-    else:
+    # one of the fields should be true
+    if not (message_details.is_email or message_details.is_sms):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='One of the fields "is_sms" or "is_email" should be true.',
         )
+
+    if message_details.is_email:
+        # broadcasting emails through background tasks
+        background_tasks.add_task(
+            broadcast_emails,
+            emails=message_details.emails,
+            message=message_details.message,
+            subject=message_details.subject,
+        )
+
+    # creating new campaign record
+    campaign = Campaign(
+        via_sms=message_details.is_sms,
+        via_email=message_details.is_email,
+        audience_number=len(message_details.emails),
+        user_id=current_user.id,
+    )
+    db.add(campaign)
+    db.commit()
+
+    response: BroadcastMessageOut = BroadcastMessageOut(
+        message="Email broadcasting added in queue"
+    )
+    return response
