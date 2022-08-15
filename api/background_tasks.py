@@ -6,6 +6,8 @@ import os
 from models import Contact, ContactCSV
 from schemas import Contacts
 from db.session import SessionLocal
+from sendgrid import SendGridAPIClient
+import sendgrid.helpers.mail as sendgrid_mail_helper
 
 s3 = boto3.resource(
     "s3",
@@ -14,6 +16,8 @@ s3 = boto3.resource(
 )
 
 s3_bucket = s3.Bucket(settings.S3_CSV_BUCKET)
+
+sendgrid_client = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
 
 
 def upload_csv_to_s3(csv_file: UploadFile, user_id: int):
@@ -59,3 +63,14 @@ def save_csv_contacts(user_id: int, contacts: Contacts):
 
         db.add_all(contacts_obj_list)
         db.commit()
+
+
+def broadcast_emails(emails: list[str], message: str, subject: str):
+    for email in emails:
+        from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
+        to_email = sendgrid_mail_helper.To(email)
+        content = sendgrid_mail_helper.Content("text/plain", f"{message}")
+        mail = sendgrid_mail_helper.Mail(from_email, to_email, subject, content)
+        sendgrid_response = sendgrid_client.client.mail.send.post(
+            request_body=mail.get()
+        )

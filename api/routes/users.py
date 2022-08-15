@@ -1,4 +1,12 @@
-from fastapi import HTTPException, Depends, APIRouter, status, HTTPException, Security
+from fastapi import (
+    HTTPException,
+    Depends,
+    APIRouter,
+    status,
+    HTTPException,
+    Security,
+    BackgroundTasks,
+)
 from sqlalchemy.orm import Session
 import sqlalchemy
 from db.session import get_db
@@ -11,8 +19,11 @@ from schemas import (
     UserUpdateSchema,
     Contacts,
     GetCampaignOut,
+    BroadcastMessageOut,
+    BroadcastMessageIn,
 )
 from auth import get_current_active_user, get_password_hash
+from background_tasks import broadcast_emails
 
 router = APIRouter()
 
@@ -175,3 +186,34 @@ def get_current_user_campaigns(
 
     response: GetCampaignOut = GetCampaignOut(campaigns=current_user.campaigns)
     return response
+
+
+@router.post("/broadcast-message", response_model=BroadcastMessageOut)
+def broadcast_message(
+    message_details: BroadcastMessageIn,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(auth.get_current_active_user),
+):
+
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    if message_details.is_email or message_details.is_sms:
+        if message_details.is_email:
+            background_tasks.add_task(
+                broadcast_emails,
+                emails=message_details.emails,
+                message=message_details.message,
+                subject=message_details.subject,
+            )
+        response: BroadcastMessageOut = BroadcastMessageOut(
+            message="email broadcast in queue"
+        )
+        return response
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='One of the fields "is_sms" or "is_email" should be true.',
+        )

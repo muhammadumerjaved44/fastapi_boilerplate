@@ -7,4 +7,12 @@ from .util import (
     MessageTemplatesOut,
     MessageTemplate,
 )
-from .users import UserSchema, Users, AddUser, UserUpdateSchema, GetCampaignOut
+from .users import (
+    UserSchema,
+    Users,
+    AddUser,
+    UserUpdateSchema,
+    GetCampaignOut,
+    BroadcastMessageOut,
+    BroadcastMessageIn,
+)

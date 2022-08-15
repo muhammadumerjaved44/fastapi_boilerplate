@@ -43,3 +43,15 @@ class CampaignSchema(BaseModel):
 
 class GetCampaignOut(BaseModel):
     campaigns: list[CampaignSchema]
+
+
+class BroadcastMessageOut(BaseModel):
+    message: str
+
+
+class BroadcastMessageIn(BaseModel):
+    is_sms: bool
+    is_email: bool
+    subject: str
+    message: str
+    emails: set[EmailStr]
