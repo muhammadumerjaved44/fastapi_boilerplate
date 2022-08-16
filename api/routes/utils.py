@@ -74,7 +74,7 @@ async def get_message_tags():
         MessageTagsOut: list of filtered contacts model's column names
     """
 
-    excluded_tags = ["user_id", "id"]
+    excluded_tags = ["user_id", "id", "composite_key"]
     tags = inspect(Contact).columns.keys()
     tags = [f"@{tag}" for tag in tags if tag not in excluded_tags]
     response: MessageTagsOut = MessageTagsOut(tags=tags)
@@ -116,6 +116,13 @@ async def upload_csv(
     Returns:
         UploadCSVOut: list of dictionaries of contacts schema
     """
+
+    # checking csv file type
+    if csv_file.content_type != "text/csv":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CSV file type is invalid.",
+        )
 
     # reading with pandas
     file_bytes = StringIO(csv_file.file.read().decode())
