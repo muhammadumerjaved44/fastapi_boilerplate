@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 import sqlalchemy
 from db.session import get_db
 import auth
-from models import User, Campaign
+from models import User, Campaign, Contact
 from schemas import (
     UserSchema,
     Users,
@@ -27,6 +27,9 @@ from schemas import (
 )
 from auth import get_current_active_user, get_password_hash
 from background_tasks import broadcast_emails
+from bs4 import BeautifulSoup
+from sqlalchemy import inspect
+
 
 router = APIRouter()
 
@@ -235,6 +238,20 @@ def broadcast_message(
             detail='One of the fields "is_sms" or "is_email" should be true.',
         )
 
+    # checking unknown tags in message
+    soup = BeautifulSoup(message_details.message, "html.parser")
+    tag_spans = soup.select('span[class="mention"]')
+    tag_texts = [tag_span.text.replace("@", "") for tag_span in tag_spans]
+    db_tags = inspect(Contact).columns.keys()
+    tags_present_in_db = all(elem in db_tags for elem in tag_texts)
+
+    # raise Bad Request if unknown tag present in message
+    if not tags_present_in_db:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="One/some of provided tag(s) in the message are not present in the database.",
+        )
+
     if message_details.is_email:
         # broadcasting emails through background tasks
         background_tasks.add_task(
@@ -242,6 +259,7 @@ def broadcast_message(
             emails=message_details.emails,
             message=message_details.message,
             subject=message_details.subject,
+            user_id=current_user.id,
         )
 
     # creating new campaign record

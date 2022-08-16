@@ -8,6 +8,7 @@ from schemas import Contacts
 from db.session import SessionLocal
 from sendgrid import SendGridAPIClient
 import sendgrid.helpers.mail as sendgrid_mail_helper
+from bs4 import BeautifulSoup
 
 s3 = boto3.resource(
     "s3",
@@ -65,15 +66,36 @@ def save_csv_contacts(user_id: int, contacts: Contacts):
         db.commit()
 
 
-def broadcast_emails(emails: list[str], message: str, subject: str):
+def broadcast_emails(emails: list[str], message: str, subject: str, user_id: int):
+    soup = BeautifulSoup(message, "html.parser")
+    tag_spans = soup.select('span[class="mention"]')
+    tag_values = dict()
+
     for email in emails:
-        from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
-        to_email = sendgrid_mail_helper.To(email)
-        content = sendgrid_mail_helper.Content("text/plain", f"{message}")
-        mail = sendgrid_mail_helper.Mail(from_email, to_email, subject, content)
-        sendgrid_response = sendgrid_client.client.mail.send.post(
-            request_body=mail.get()
-        )
+
+        with SessionLocal() as db:
+            message = f"{message}"
+            contact = (
+                db.query(Contact)
+                .filter_by(preferred_email=email, user_id=user_id)
+                .one_or_none()
+            )
+
+            if contact is not None:
+                contact_dict = contact.__dict__
+                tag_values = dict()
+                for tag_span in tag_spans:
+                    tag_value = contact_dict[tag_span.text.replace("@", "")]
+                    message = message.replace(str(tag_span), tag_value)
+                    tag_values[str(tag_span)] = tag_value
+
+                from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
+                to_email = sendgrid_mail_helper.To(email)
+                content = sendgrid_mail_helper.Content("text/html", f"{message}")
+                mail = sendgrid_mail_helper.Mail(from_email, to_email, subject, content)
+                sendgrid_response = sendgrid_client.client.mail.send.post(
+                    request_body=mail.get()
+                )
 
 
 def send_email(to_email: str, subject: str, message: str):

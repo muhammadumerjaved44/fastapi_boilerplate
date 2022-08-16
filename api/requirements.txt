@@ -11,3 +11,5 @@ sendgrid
 python-multipart
 boto3
 pandas
+email-validator
+bs4
