@@ -1,9 +1,9 @@
 from typing import Union
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class RequestDemoIn(BaseModel):
-    email: str
+    email: EmailStr
     name: str
     phone_number: str
     job_title: str

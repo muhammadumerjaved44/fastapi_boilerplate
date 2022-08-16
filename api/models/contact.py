@@ -1,20 +1,29 @@
+from enum import unique
 from sqlalchemy import Integer, String, ForeignKey, Float
 from sqlalchemy.sql.schema import Column
 from db.session import Base
+
+
+def composite_key_defalut(context) -> str:
+    parameters = context.get_current_parameters()
+    return f"{parameters['user_id']}_{parameters['preferred_email']}"
 
 
 class Contact(Base):
     __tablename__ = "contact"
 
     id = Column(Integer, primary_key=True, index=True)
+    composite_key = Column(
+        String(50), unique=True, index=True, default=composite_key_defalut
+    )
     student_id = Column(String(50))
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
-    preferred_email = Column(String(255), unique=True)
+    preferred_email = Column(String(255), index=True)
     crc_email = Column(String(255))
     application_email = Column(String(255))
-    day_phone_number = Column(String(20))
-    evening_phone_number = Column(String(20))
+    day_phone_number = Column(String(20), index=True)
+    evening_phone_number = Column(String(20), index=True)
     major = Column(String(255))
     cac = Column(String(255))
     age = Column(Integer)

@@ -1,39 +1,54 @@
-from fastapi import HTTPException, Depends, APIRouter, status, HTTPException, Security
+from fastapi import (
+    HTTPException,
+    Depends,
+    APIRouter,
+    status,
+    HTTPException,
+    Security,
+    BackgroundTasks,
+)
 from sqlalchemy.orm import Session
 import sqlalchemy
 from db.session import get_db
 import auth
-from models import User
+from models import User, Campaign, Contact
 from schemas import (
     UserSchema,
     Users,
-    AddUser,
-    UserUpdateSchema,
+    CreateUserIn,
+    CreateUserOut,
+    UpdateUserIn,
+    UpdateUserOut,
+    DeleteUserOut,
     Contacts,
     GetCampaignOut,
+    BroadcastMessageOut,
+    BroadcastMessageIn,
 )
 from auth import get_current_active_user, get_password_hash
+from background_tasks import broadcast_emails
+from bs4 import BeautifulSoup
+from sqlalchemy import inspect
+
 
 router = APIRouter()
 
 
 @router.get("/{id}", response_model=UserSchema)
-def userById(
+def get_user_by_id(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """ "
-        get user by id
+    """get user by id
     Args:
-        id (int): user_id
-        session (Session, optional): database connection
+        id (user's id): int
 
     Raises:
         HTTPException: 404, user not found
 
     Returns:
-        _type_: instant user by id
+        UserSchema: instance of user by id
     """
     user = session.query(User).get(id)
     if user is None:
@@ -46,35 +61,38 @@ def userById(
     "/",
     response_model=Users,
 )
-def userList(
+def get_all_users(
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
     """get all users list
 
     Args:
-        session (Session, optional): database connection
+        None
 
     Returns:
-        _type_: all users list
+        Users: all users list
     """
     users = session.query(User).all()
     response: Users = Users(users=users)
     return response
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
-def addUser(
-    user: AddUser,
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CreateUserOut)
+def create_user(
+    user: CreateUserIn,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """for adding new user
+    """create new user
 
     Args:
-        user (AddUser): user schema
-        session (Session, optional):  database connection
-        current_user (User, optional): for authentication and authorization
+        email: str
+        password: str
+        first_name: str
+        last_name: str
+        scope: str
+        is_active: bool
 
     Raises:
         HTTPException: 400, Email Already exists
@@ -91,21 +109,22 @@ def addUser(
         session.refresh(userObj)
     except sqlalchemy.exc.IntegrityError:
         raise HTTPException(status_code=400, detail="Email Already exists")
-    return "User Created Successfully"
+
+    response: CreateUserOut = CreateUserOut(message="User Created Successfully")
+    return response
 
 
-@router.put("/{id}")
-def updateUser(
+@router.put("/{id}", response_model=UpdateUserOut)
+def update_user(
     id: int,
-    user: UserUpdateSchema,
+    user: UpdateUserIn,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """update
+    """update user by id
 
     Args:
-        id (int): take id for updating user
-        session (Session, optional): database connection
+        id (id for updating user): int
 
     Raises:
         HTTPException: 404, user not found
@@ -119,11 +138,13 @@ def updateUser(
     userObj.first_name = user.first_name
     userObj.last_name = user.last_name
     session.commit()
-    return {"msg": "user updated"}
+
+    response: UpdateUserOut = UpdateUserOut(message="user updated")
+    return response
 
 
-@router.delete("/{id}")
-def deleteUser(
+@router.delete("/{id}", response_model=DeleteUserOut)
+def delete_user(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
@@ -146,18 +167,25 @@ def deleteUser(
     session.delete(userObj)
     session.commit()
     session.close
-    return userObj.first_name + "  deleted"
+
+    response: UpdateUserOut = UpdateUserOut(
+        message=f"user with id: {userObj.first_name} deleted"
+    )
+    return response
 
 
 @router.get("/me/contacts", response_model=Contacts)
 def get_current_user_contacts(
     current_user: User = Security(get_current_active_user, scopes=["user"]),
 ):
+    """Get contacts of current user
 
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+    Args:
+        None
+
+    Returns:
+        Contacts: list of contacts
+    """
 
     response: Contacts = Contacts(contacts=current_user.contacts)
     return response
@@ -165,13 +193,86 @@ def get_current_user_contacts(
 
 @router.get("/me/campaigns", response_model=GetCampaignOut)
 def get_current_user_campaigns(
-    current_user: User = Depends(auth.get_current_active_user),
+    current_user: User = Security(auth.get_current_active_user, scopes=["user"]),
 ):
+    """Get campaigns of current user
 
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+    Args:
+        None
+
+    Returns:
+        Campaigns: list of campaings
+    """
 
     response: GetCampaignOut = GetCampaignOut(campaigns=current_user.campaigns)
+    return response
+
+
+@router.post("/broadcast-message", response_model=BroadcastMessageOut)
+def broadcast_message(
+    message_details: BroadcastMessageIn,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Security(auth.get_current_active_user, scopes=["user"]),
+):
+    """Broadcast message by email and/or sms
+
+    Args:
+        is_sms (bool): should it send message through SMS/MMS
+        is_email (bool): should it send message through Email
+        subject (string): Subject of the Email
+        message (string): Message contect with tags
+        emails (list of strings): list of emails of reciepent contacts
+
+    Raises:
+        HTTPException: 400 if both of the "is_sms" or "is_email" fields are false
+
+    Returns:
+        BroadcastMessageOut: success message
+    """
+
+    # one of the fields should be true
+    if not (message_details.is_email or message_details.is_sms):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='One of the fields "is_sms" or "is_email" should be true.',
+        )
+
+    # checking unknown tags in message
+    soup = BeautifulSoup(message_details.message, "html.parser")
+    tag_spans = soup.select('span[class="mention"]')
+    tag_texts = [tag_span.text.replace("@", "") for tag_span in tag_spans]
+    db_tags = inspect(Contact).columns.keys()
+    tags_present_in_db = all(elem in db_tags for elem in tag_texts)
+
+    # raise Bad Request if unknown tag present in message
+    if not tags_present_in_db:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="One/some of provided tag(s) in the message are not present in the database.",
+        )
+
+    if message_details.is_email:
+        # broadcasting emails through background tasks
+        background_tasks.add_task(
+            broadcast_emails,
+            emails=message_details.emails,
+            message=message_details.message,
+            subject=message_details.subject,
+            user_id=current_user.id,
+        )
+
+    # creating new campaign record
+    campaign = Campaign(
+        via_sms=message_details.is_sms,
+        via_email=message_details.is_email,
+        audience_number=len(message_details.emails),
+        user_id=current_user.id,
+    )
+    db.add(campaign)
+    db.commit()
+
+    response: BroadcastMessageOut = BroadcastMessageOut(
+        message="Email broadcasting added in queue"
+    )
     return response

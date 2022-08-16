@@ -3,13 +3,17 @@ from typing import List
 from datetime import datetime
 
 
-class AddUser(BaseModel):
+class CreateUserIn(BaseModel):
     email: EmailStr
     password: str
     first_name: str
     last_name: str
     scope: str
     is_active: bool
+
+
+class CreateUserOut(BaseModel):
+    message: str
 
 
 class UserSchema(BaseModel):
@@ -26,9 +30,17 @@ class Users(BaseModel):
     users: List[UserSchema]
 
 
-class UserUpdateSchema(BaseModel):
+class UpdateUserIn(BaseModel):
     first_name: str
     last_name: str
+
+
+class UpdateUserOut(BaseModel):
+    message: str
+
+
+class DeleteUserOut(BaseModel):
+    message: str
 
 
 class CampaignSchema(BaseModel):
@@ -43,3 +55,15 @@ class CampaignSchema(BaseModel):
 
 class GetCampaignOut(BaseModel):
     campaigns: list[CampaignSchema]
+
+
+class BroadcastMessageOut(BaseModel):
+    message: str
+
+
+class BroadcastMessageIn(BaseModel):
+    is_sms: bool
+    is_email: bool
+    subject: str
+    message: str
+    emails: set[EmailStr]
