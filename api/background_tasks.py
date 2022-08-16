@@ -74,7 +74,7 @@ def broadcast_emails(emails: list[str], message: str, subject: str, user_id: int
     for email in emails:
 
         with SessionLocal() as db:
-            message = f"{message}"
+            message_personal = f"{message}"
             contact = (
                 db.query(Contact)
                 .filter_by(preferred_email=email, user_id=user_id)
@@ -86,12 +86,17 @@ def broadcast_emails(emails: list[str], message: str, subject: str, user_id: int
                 tag_values = dict()
                 for tag_span in tag_spans:
                     tag_value = contact_dict[tag_span.text.replace("@", "")]
-                    message = message.replace(str(tag_span), tag_value)
+                    message_personal = message_personal.replace(
+                        str(tag_span), tag_value
+                    )
                     tag_values[str(tag_span)] = tag_value
-
+                print(email)
+                print(message_personal)
                 from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
                 to_email = sendgrid_mail_helper.To(email)
-                content = sendgrid_mail_helper.Content("text/html", f"{message}")
+                content = sendgrid_mail_helper.Content(
+                    "text/html", f"{message_personal}"
+                )
                 mail = sendgrid_mail_helper.Mail(from_email, to_email, subject, content)
                 sendgrid_response = sendgrid_client.client.mail.send.post(
                     request_body=mail.get()
