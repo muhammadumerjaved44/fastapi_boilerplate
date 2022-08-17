@@ -33,6 +33,8 @@ class DevConfig(Config):
     S3_SECRET_ACCESS_KEY = config("S3_SECRET_ACCESS_KEY")
     S3_CSV_BUCKET = config("S3_CSV_BUCKET")
     S3_CSV_FOLDER = config("S3_CSV_FOLDER")
+    FIRST_SUPERUSER_EMAIL = config("FIRST_SUPERUSER_EMAIL")
+    FIRST_SUPERUSER_PASSWORD = config("FIRST_SUPERUSER_PASSWORD")
 
 
 class TestConfig(Config):

@@ -5,6 +5,8 @@ from db.session import Base
 
 
 class User(Base):
+    """This model application user's details"""
+
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -17,3 +19,6 @@ class User(Base):
     contacts = relationship("Contact", cascade="all, delete-orphan")
     contact_csvs = relationship("ContactCSV", cascade="all, delete-orphan")
     campaigns = relationship("Campaign", cascade="all, delete-orphan")
+    custom_message_templates = relationship(
+        "CustomMessageTemplate", cascade="all, delete-orphan"
+    )

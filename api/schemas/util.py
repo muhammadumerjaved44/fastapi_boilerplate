@@ -68,13 +68,14 @@ class MessageTagsOut(BaseModel):
     tags: list[str]
 
 
-class MessageTemplate(BaseModel):
+class DefaultMessageTemplate(BaseModel):
     subject: str
     message: str
+    template_type: str
 
     class Config:
         orm_mode = True
 
 
-class MessageTemplatesOut(BaseModel):
-    message_templates: list[MessageTemplate]
+class DefaultMessageTemplatesOut(BaseModel):
+    message_templates: list[DefaultMessageTemplate]

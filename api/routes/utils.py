@@ -12,7 +12,7 @@ from schemas import (
     RequestDemoOut,
     Contacts,
     MessageTagsOut,
-    MessageTemplatesOut,
+    DefaultMessageTemplatesOut,
 )
 from sqlalchemy import inspect
 import pandas as pd
@@ -81,21 +81,25 @@ async def get_message_tags():
     return response
 
 
-@router.get("/message-templates", response_model=MessageTemplatesOut)
+@router.get("/message-templates", response_model=DefaultMessageTemplatesOut)
 async def get_message_templates(
     db: Session = Depends(get_db),
 ):
-    """endpoint for getting message templates from database
+    """endpoint for getting default message templates from database
 
     Args:
         None
 
     Returns:
-        MessageTemplatesOut: list of MessageTemplate model objects
+        DefaultMessageTemplatesOut: list of DefaultMessageTemplate schema model objects
     """
 
-    message_templates = db.query(MessageTemplate).all()
-    response: MessageTemplatesOut = MessageTemplatesOut(
+    message_templates = (
+        db.query(MessageTemplate)
+        .filter_by(template_type="default_message_template")
+        .all()
+    )
+    response: DefaultMessageTemplatesOut = DefaultMessageTemplatesOut(
         message_templates=message_templates
     )
     return response
