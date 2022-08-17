@@ -273,6 +273,7 @@ def broadcast_message(
     campaign = Campaign(
         via_sms=message_details.is_sms,
         via_email=message_details.is_email,
+        message=message_details.message,
         audience_number=len(message_details.emails),
         user_id=current_user.id,
     )

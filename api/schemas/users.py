@@ -46,6 +46,7 @@ class DeleteUserOut(BaseModel):
 class CampaignSchema(BaseModel):
     via_sms: bool
     via_email: bool
+    message: str
     audience_number: int
     created_at: datetime
 
