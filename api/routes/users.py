@@ -52,7 +52,9 @@ def get_user_by_id(
     """
     user = session.query(User).get(id)
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     response: UserSchema = user
     return response
 
@@ -108,7 +110,9 @@ def create_user(
         session.commit()
         session.refresh(userObj)
     except sqlalchemy.exc.IntegrityError:
-        raise HTTPException(status_code=400, detail="Email Already exists")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email Already exists"
+        )
 
     response: CreateUserOut = CreateUserOut(message="User Created Successfully")
     return response
@@ -134,7 +138,9 @@ def update_user(
     """
     userObj = session.query(User).get(id)
     if userObj is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     userObj.first_name = user.first_name
     userObj.last_name = user.last_name
     session.commit()
@@ -163,12 +169,13 @@ def delete_user(
     """
     userObj = session.query(User).get(id)
     if userObj is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     session.delete(userObj)
     session.commit()
-    session.close
 
-    response: UpdateUserOut = UpdateUserOut(
+    response: DeleteUserOut = DeleteUserOut(
         message=f"user with id: {userObj.first_name} deleted"
     )
     return response
@@ -243,7 +250,7 @@ def broadcast_message(
     tag_spans = soup.select('span[class="mention"]')
     tag_texts = [tag_span.text.replace("@", "") for tag_span in tag_spans]
     db_tags = inspect(Contact).columns.keys()
-    tags_present_in_db = all(elem in db_tags for elem in tag_texts)
+    tags_present_in_db = all(tag in db_tags for tag in tag_texts)
 
     # raise Bad Request if unknown tag present in message
     if not tags_present_in_db:

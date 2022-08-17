@@ -6,6 +6,8 @@ from db.session import Base
 
 
 class Campaign(Base):
+    """This model has user's broadcasted campaign/message details"""
+
     __tablename__ = "campaign"
 
     id = Column(Integer, primary_key=True, index=True)

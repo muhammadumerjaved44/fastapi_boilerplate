@@ -10,6 +10,8 @@ def composite_key_defalut(context) -> str:
 
 
 class Contact(Base):
+    """This model has user's contact (recepients of messages) details"""
+
     __tablename__ = "contact"
 
     id = Column(Integer, primary_key=True, index=True)
