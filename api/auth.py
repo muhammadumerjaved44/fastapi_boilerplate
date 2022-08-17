@@ -117,9 +117,6 @@ async def get_current_user(
         db (Session, optional): database connection
 
     Raises:
-        credentials_exception: 401, not validate credentials
-        credentials_exception: _description_
-        credentials_exception: _description_
         HTTPException: 401, not enough permissions
 
     Returns:

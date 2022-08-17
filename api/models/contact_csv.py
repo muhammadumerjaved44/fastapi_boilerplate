@@ -4,6 +4,8 @@ from db.session import Base
 
 
 class ContactCSV(Base):
+    """This model has users uploaded csv's details"""
+
     __tablename__ = "contact_csv"
 
     id = Column(Integer, primary_key=True, index=True)

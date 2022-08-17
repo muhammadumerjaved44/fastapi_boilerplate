@@ -90,8 +90,7 @@ def broadcast_emails(emails: list[str], message: str, subject: str, user_id: int
                         str(tag_span), tag_value
                     )
                     tag_values[str(tag_span)] = tag_value
-                print(email)
-                print(message_personal)
+
                 from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
                 to_email = sendgrid_mail_helper.To(email)
                 content = sendgrid_mail_helper.Content(

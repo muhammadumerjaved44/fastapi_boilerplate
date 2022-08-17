@@ -5,12 +5,16 @@ from config import settings
 from uvicorn.config import LOGGING_CONFIG
 from db.session import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
+from db.initialize_db import initialize_db
 
 # declaring FastAPI app
 app = FastAPI(title=settings.PROJECT_NAME)
 
 # create all tables for first time
 Base.metadata.create_all(bind=engine)
+
+# inserting initial database data
+initialize_db()
 
 # routes
 app.include_router(utils.router, prefix="/utils", tags=["utils"])

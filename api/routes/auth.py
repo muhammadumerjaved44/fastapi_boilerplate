@@ -3,7 +3,7 @@ from db.session import get_db
 from config import settings
 from schemas import Token
 from sqlalchemy.orm import Session
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException, status
 from fastapi.security import (
     OAuth2PasswordRequestForm,
 )
@@ -30,7 +30,10 @@ async def login_for_access_token(
     """
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect username or password",
+        )
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     access_token = create_access_token(

@@ -4,8 +4,8 @@ from .util import (
     RequestDemoOut,
     Contacts,
     MessageTagsOut,
-    MessageTemplatesOut,
-    MessageTemplate,
+    DefaultMessageTemplatesOut,
+    DefaultMessageTemplate,
 )
 from .users import (
     UserSchema,
