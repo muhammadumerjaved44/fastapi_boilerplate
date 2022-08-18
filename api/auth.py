@@ -9,12 +9,11 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter, HTTPException, Security, status
 from fastapi.security import (
     OAuth2PasswordBearer,
-    OAuth2PasswordRequestForm,
     SecurityScopes,
 )
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 ALGORITHM = "HS256"
 
@@ -44,7 +43,7 @@ def verify_password(plain_password, hashed_password):
         hashed_password (bool): hased password
 
     Returns:
-        _type_: verification detail
+        string: verification detail
     """
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -57,7 +56,7 @@ def get_password_hash(password):
         password (_type_): password
 
     Returns:
-        _type_: hashed password
+        string: hashed password
     """
     return pwd_context.hash(password)
 
@@ -71,7 +70,7 @@ def authenticate_user(username: str, password: str, db: Session):
         db (Session): database connection
 
     Returns:
-        _type_: authenticated user if conditions true
+        False or User model: user if authenticated otherwise returns False
     """
     user = db.query(User).filter(User.email == username).first()
     if not user:
@@ -92,7 +91,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
         expires_delta (Union[timedelta, None], optional): time . Defaults to None.
 
     Returns:
-        _type_: token
+        str: token
     """
     to_encode = data.copy()
     if expires_delta:
@@ -117,10 +116,12 @@ async def get_current_user(
         db (Session, optional): database connection
 
     Raises:
-        HTTPException: 401, not enough permissions
+        HTTPException:
+                    - 401, not enough permissions
+                    - 401, Could not validate credentials
 
     Returns:
-        _type_: _description_
+        User model: if authenticated then returns user otherwise status 401
     """
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
@@ -167,7 +168,7 @@ async def get_current_active_user(
         HTTPException: 400, not active
 
     Returns:
-        _type_: current_user
+        User model: if user is active then returns user otherwise status 400
     """
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")

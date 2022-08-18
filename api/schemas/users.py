@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 
@@ -18,8 +18,8 @@ class CreateUserOut(BaseModel):
 
 class UserSchema(BaseModel):
     id: int
-    first_name: str
-    last_name: str
+    first_name: Optional[str]
+    last_name: Optional[str]
     email: EmailStr
 
     class Config:
