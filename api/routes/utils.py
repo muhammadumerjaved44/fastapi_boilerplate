@@ -19,12 +19,13 @@ import pandas as pd
 import numpy as np
 from io import StringIO
 import auth
-from models import User, Contact, MessageTemplate
+from models import User, Contact, DefaultMessageTemplate
 import pydantic
 from db.session import get_db
 from sqlalchemy.orm import Session
 from background_tasks import upload_csv_to_s3, save_csv_contacts, send_email
 from config import settings
+from crud import default_message_template_crud
 
 
 router = APIRouter()
@@ -94,13 +95,9 @@ async def get_message_templates(
         DefaultMessageTemplatesOut: list of DefaultMessageTemplate schema model objects
     """
 
-    message_templates = (
-        db.query(MessageTemplate)
-        .filter_by(template_type="default_message_template")
-        .all()
-    )
+    default_message_templates = default_message_template_crud.get_all(db=db)
     response: DefaultMessageTemplatesOut = DefaultMessageTemplatesOut(
-        message_templates=message_templates
+        default_message_templates=default_message_templates
     )
     return response
 

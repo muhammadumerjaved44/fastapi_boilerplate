@@ -9,6 +9,7 @@ from db.session import SessionLocal
 from sendgrid import SendGridAPIClient
 import sendgrid.helpers.mail as sendgrid_mail_helper
 from bs4 import BeautifulSoup
+from crud import contact_crud, contact_csv_crud
 
 s3 = boto3.resource(
     "s3",
@@ -35,13 +36,9 @@ def upload_csv_to_s3(csv_file: UploadFile, user_id: int):
     object = s3.Object(settings.S3_CSV_BUCKET, file_path)
     object.put(Body=csv_file.file)
     with SessionLocal() as db:
-        contact_csv = ContactCSV(
-            s3_uri=object.key,
-            s3_bucket=object.bucket_name,
-            user_id=user_id,
+        contact_csv = contact_csv_crud.create(
+            s3_uri=object.key, s3_bucket=object.bucket_name, user_id=user_id, db=db
         )
-        db.add(contact_csv)
-        db.commit()
 
 
 def save_csv_contacts(user_id: int, contacts: Contacts):
@@ -49,21 +46,19 @@ def save_csv_contacts(user_id: int, contacts: Contacts):
     with SessionLocal() as db:
         contacts_obj_list = []
 
-        for record in contacts:
-            instance = (
-                db.query(Contact)
-                .filter_by(preferred_email=record.preferred_email, user_id=user_id)
-                .one_or_none()
+        for contact in contacts:
+            contact_db = contact_crud.get_by_preferred_email(
+                preferred_email=contact.preferred_email, user_id=user_id, db=db
             )
-            if instance:
-                for attr, new_val in record.dict().items():
-                    setattr(instance, attr, new_val)
+
+            if contact_db:
+                for attribute, new_value in contact.dict().items():
+                    setattr(contact_db, attribute, new_value)
             else:
-                create_kwargs = record.dict()
+                create_kwargs = contact.dict()
                 contacts_obj_list.append(Contact(**create_kwargs, user_id=user_id))
 
-        db.add_all(contacts_obj_list)
-        db.commit()
+        contact_crud.create_multi(contacts_obj_list, db=db)
 
 
 def broadcast_emails(emails: list[str], message: str, subject: str, user_id: int):
@@ -75,10 +70,8 @@ def broadcast_emails(emails: list[str], message: str, subject: str, user_id: int
 
         with SessionLocal() as db:
             message_personal = f"{message}"
-            contact = (
-                db.query(Contact)
-                .filter_by(preferred_email=email, user_id=user_id)
-                .one_or_none()
+            contact = contact_crud.get_by_preferred_email(
+                preferred_email=email, user_id=user_id, db=db
             )
 
             if contact is not None:
