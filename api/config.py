@@ -9,9 +9,7 @@ TEMP_ENV = config("ENV")
 class Config:
     """Base config."""
 
-    pass
-
-    PROJECT_NAME = config("PROJECT_NAME") + "_APi"
+    PROJECT_NAME = config("PROJECT_NAME") + "_API"
 
 
 class DevConfig(Config):

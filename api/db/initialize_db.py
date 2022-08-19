@@ -1,6 +1,7 @@
 from models import User, DefaultMessageTemplate
 from db.session import SessionLocal
 from config import settings
+from auth import get_password_hash
 
 
 def initialize_db():
@@ -11,7 +12,7 @@ def initialize_db():
         if not super_user:
             super_user = User(
                 email=settings.FIRST_SUPERUSER_EMAIL,
-                password=settings.FIRST_SUPERUSER_PASSWORD,
+                password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
                 is_active=True,
                 scope="superuser",
             )

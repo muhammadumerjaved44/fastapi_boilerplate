@@ -11,7 +11,7 @@ from db.initialize_db import initialize_db
 app = FastAPI(title=settings.PROJECT_NAME)
 
 # create all tables for first time
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 # inserting initial database data
 initialize_db()

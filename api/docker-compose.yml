@@ -11,9 +11,20 @@ services:
     volumes:
       - .:/code
     depends_on:
+      - migration_app
+    command: [ "python", "main.py" ]
+
+  migration_app:
+    container_name: ${PROJECT_NAME}_Migration_App
+    build: .
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/code
+    command: "alembic upgrade head"
+    depends_on:
       db:
         condition: service_healthy
-    command: [ "python", "main.py" ]
 
   db:
     image: mysql

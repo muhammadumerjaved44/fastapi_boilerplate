@@ -13,3 +13,4 @@ boto3
 pandas
 email-validator
 bs4
+cryptography
