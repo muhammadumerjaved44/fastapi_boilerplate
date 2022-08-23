@@ -25,7 +25,7 @@ from schemas import (
     BroadcastMessageIn,
 )
 from auth import get_current_active_user, get_password_hash
-from background_tasks import broadcast_emails
+from background_tasks import broadcast_message_task
 from bs4 import BeautifulSoup
 from sqlalchemy import inspect
 from crud import user_crud, campaign_crud
@@ -248,11 +248,13 @@ def broadcast_message(
     if message_details.is_email:
         # broadcasting emails through background tasks
         background_tasks.add_task(
-            broadcast_emails,
+            broadcast_message_task,
             emails=message_details.emails,
             message=message_details.message,
             subject=message_details.subject,
             user_id=current_user.id,
+            via_email=message_details.is_email,
+            via_sms=message_details.is_sms,
         )
 
     # creating new campaign record

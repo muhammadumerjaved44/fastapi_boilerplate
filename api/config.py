@@ -10,11 +10,6 @@ class Config:
     """Base config."""
 
     PROJECT_NAME = config("PROJECT_NAME") + "_API"
-
-
-class DevConfig(Config):
-    ENV = "development"
-    DEBUG = True
     DB_DRIVER = config("DB_DRIVER")
     DB_USER = config("DB_USER")
     DB_PASSWORD = config("DB_PASSWORD")
@@ -25,7 +20,7 @@ class DevConfig(Config):
     ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", cast=int)
     SECRET_KEY = config("SECRET_KEY")
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = json.loads(config("BACKEND_CORS_ORIGINS"))
-    STELLO_EMAIL = config("STELLO_EMAIL")
+    DEFAULT_SENDER_EMAIL = config("DEFAULT_SENDER_EMAIL")
     SENDGRID_API_KEY = config("SENDGRID_API_KEY")
     S3_ACCESS_KEY_ID = config("S3_ACCESS_KEY_ID")
     S3_SECRET_ACCESS_KEY = config("S3_SECRET_ACCESS_KEY")
@@ -33,11 +28,20 @@ class DevConfig(Config):
     S3_CSV_FOLDER = config("S3_CSV_FOLDER")
     FIRST_SUPERUSER_EMAIL = config("FIRST_SUPERUSER_EMAIL")
     FIRST_SUPERUSER_PASSWORD = config("FIRST_SUPERUSER_PASSWORD")
+    TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN")
+    TWILIO_FROM_PHONE_NUMBER = config("TWILIO_FROM_PHONE_NUMBER")
+    TWILIO_TO_PHONE_NUMBER = config("TWILIO_TO_PHONE_NUMBER")
+
+
+class DevConfig(Config):
+    ENV = "development"
+    DEBUG = True
 
 
 class TestConfig(Config):
     ENV = "testing"
-    DEBUG = False
+    DEBUG = True
 
 
 class ProdConfig(Config):

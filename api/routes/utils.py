@@ -56,7 +56,7 @@ async def request_demo(
 
     background_tasks.add_task(
         send_email,
-        to_email=settings.STELLO_EMAIL,
+        to_email=settings.FIRST_SUPERUSER_EMAIL,
         subject="Stello Demo Request",
         message=message,
     )
@@ -132,7 +132,7 @@ async def upload_csv(
     # validating required columns
     if not all(
         x in contacts_df.columns.tolist()
-        for x in ["First.Name", "Last.Name", "Preferred.Email"]
+        for x in ["First.Name", "Last.Name", "Preferred.Email", "Day.Phone"]
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
