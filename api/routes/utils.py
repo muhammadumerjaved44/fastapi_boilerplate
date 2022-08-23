@@ -56,7 +56,7 @@ async def request_demo(
 
     background_tasks.add_task(
         send_email,
-        to_email=settings.STELLO_EMAIL,
+        to_email=settings.FIRST_SUPERUSER_EMAIL,
         subject="Stello Demo Request",
         message=message,
     )

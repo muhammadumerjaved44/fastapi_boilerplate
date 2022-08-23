@@ -94,7 +94,9 @@ def broadcast_message_task(
 
                 # sending email
                 if via_email:
-                    from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
+                    from_email = sendgrid_mail_helper.Email(
+                        settings.DEFAULT_SENDER_EMAIL
+                    )
                     to_email = sendgrid_mail_helper.To(email)
                     content = sendgrid_mail_helper.Content(
                         "text/html", f"{message_personal}"
@@ -124,7 +126,7 @@ def broadcast_message_task(
 
 
 def send_email(to_email: str, subject: str, message: str):
-    from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
+    from_email = sendgrid_mail_helper.Email(settings.DEFAULT_SENDER_EMAIL)
     to_email = sendgrid_mail_helper.To(to_email)
     content = sendgrid_mail_helper.Content("text/plain", f"{message}")
     mail = sendgrid_mail_helper.Mail(from_email, to_email, subject, content)
