@@ -14,3 +14,4 @@ pandas
 email-validator
 bs4
 cryptography
+twilio

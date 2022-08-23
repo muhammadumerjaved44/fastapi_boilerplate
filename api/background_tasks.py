@@ -3,13 +3,14 @@ from config import settings
 from fastapi import UploadFile
 from datetime import datetime
 import os
-from models import Contact, ContactCSV
+from models import Contact
 from schemas import Contacts
 from db.session import SessionLocal
 from sendgrid import SendGridAPIClient
 import sendgrid.helpers.mail as sendgrid_mail_helper
 from bs4 import BeautifulSoup
 from crud import contact_crud, contact_csv_crud
+from twilio.rest import Client as TwilioClient
 
 s3 = boto3.resource(
     "s3",
@@ -20,6 +21,8 @@ s3 = boto3.resource(
 s3_bucket = s3.Bucket(settings.S3_CSV_BUCKET)
 
 sendgrid_client = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+
+twilio_client = TwilioClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
 
 def upload_csv_to_s3(csv_file: UploadFile, user_id: int):
@@ -61,10 +64,16 @@ def save_csv_contacts(user_id: int, contacts: Contacts):
         contact_crud.create_multi(contacts_obj_list, db=db)
 
 
-def broadcast_emails(emails: list[str], message: str, subject: str, user_id: int):
+def broadcast_message_task(
+    emails: list[str],
+    message: str,
+    subject: str,
+    user_id: int,
+    via_email: bool,
+    via_sms: bool,
+):
     soup = BeautifulSoup(message, "html.parser")
     tag_spans = soup.select('span[class="mention"]')
-    tag_values = dict()
 
     for email in emails:
 
@@ -76,23 +85,42 @@ def broadcast_emails(emails: list[str], message: str, subject: str, user_id: int
 
             if contact is not None:
                 contact_dict = contact.__dict__
-                tag_values = dict()
+
                 for tag_span in tag_spans:
                     tag_value = contact_dict[tag_span.text.replace("@", "")]
                     message_personal = message_personal.replace(
                         str(tag_span), tag_value
                     )
-                    tag_values[str(tag_span)] = tag_value
 
-                from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
-                to_email = sendgrid_mail_helper.To(email)
-                content = sendgrid_mail_helper.Content(
-                    "text/html", f"{message_personal}"
-                )
-                mail = sendgrid_mail_helper.Mail(from_email, to_email, subject, content)
-                sendgrid_response = sendgrid_client.client.mail.send.post(
-                    request_body=mail.get()
-                )
+                # sending email
+                if via_email:
+                    from_email = sendgrid_mail_helper.Email(settings.STELLO_EMAIL)
+                    to_email = sendgrid_mail_helper.To(email)
+                    content = sendgrid_mail_helper.Content(
+                        "text/html", f"{message_personal}"
+                    )
+                    mail = sendgrid_mail_helper.Mail(
+                        from_email, to_email, subject, content
+                    )
+                    sendgrid_response = sendgrid_client.client.mail.send.post(
+                        request_body=mail.get()
+                    )
+
+                # sending sms
+                if via_sms:
+                    soup_sms = BeautifulSoup(message_personal, "html.parser")
+                    message_sms = soup_sms.get_text(separator="\n")
+
+                    if settings.ENV in ["development", "testing"]:
+                        sms_recipient_number = settings.TWILIO_TO_PHONE_NUMBER
+                    elif settings.ENV == "production":
+                        sms_recipient_number = contact_dict["day_phone_number"]
+
+                    twilio_sms_response = twilio_client.messages.create(
+                        body=message_sms,
+                        from_=settings.TWILIO_FROM_PHONE_NUMBER,
+                        to=sms_recipient_number,
+                    )
 
 
 def send_email(to_email: str, subject: str, message: str):
