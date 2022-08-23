@@ -245,17 +245,16 @@ def broadcast_message(
             detail="One/some of provided tag(s) in the message are not present in the database.",
         )
 
-    if message_details.is_email:
-        # broadcasting emails through background tasks
-        background_tasks.add_task(
-            broadcast_message_task,
-            emails=message_details.emails,
-            message=message_details.message,
-            subject=message_details.subject,
-            user_id=current_user.id,
-            via_email=message_details.is_email,
-            via_sms=message_details.is_sms,
-        )
+    # broadcasting emails through background tasks
+    background_tasks.add_task(
+        broadcast_message_task,
+        emails=message_details.emails,
+        message=message_details.message,
+        subject=message_details.subject,
+        user_id=current_user.id,
+        via_email=message_details.is_email,
+        via_sms=message_details.is_sms,
+    )
 
     # creating new campaign record
     campaign = campaign_crud.create(
