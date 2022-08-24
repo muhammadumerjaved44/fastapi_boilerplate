@@ -78,4 +78,4 @@ class DefaultMessageTemplate(BaseModel):
 
 
 class DefaultMessageTemplatesOut(BaseModel):
-    default_message_templates: list[DefaultMessageTemplate]
+    message_templates: list[DefaultMessageTemplate]

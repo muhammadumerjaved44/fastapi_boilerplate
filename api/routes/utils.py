@@ -97,7 +97,7 @@ async def get_message_templates(
 
     default_message_templates = default_message_template_crud.get_all(db=db)
     response: DefaultMessageTemplatesOut = DefaultMessageTemplatesOut(
-        default_message_templates=default_message_templates
+        message_templates=default_message_templates
     )
     return response
 
