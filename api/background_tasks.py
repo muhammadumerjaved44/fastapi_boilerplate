@@ -75,6 +75,11 @@ def broadcast_message_task(
     soup = BeautifulSoup(message, "html.parser")
     tag_spans = soup.select('span[class="mention"]')
 
+    # subject is required for emails in sendgrid API
+    # if subject is empty then replace it with a white space which is converted to (No Subject)
+    if not subject:
+        subject = " "
+
     for email in emails:
 
         with SessionLocal() as db:
