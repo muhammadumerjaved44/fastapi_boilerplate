@@ -11,9 +11,6 @@ class Config:
 
     pass
 
-    PROJECT_NAME = config("PROJECT_NAME") + "_APi"
-
-
 class DevConfig(Config):
     ENV = "development"
     DEBUG = True
@@ -27,8 +24,6 @@ class DevConfig(Config):
     ACCESS_TOKEN_EXPIRE_MINUTES = config("ACCESS_TOKEN_EXPIRE_MINUTES", cast=int)
     SECRET_KEY = config("SECRET_KEY")
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = json.loads(config("BACKEND_CORS_ORIGINS"))
-    STELLO_EMAIL = config("STELLO_EMAIL")
-    SENDGRID_API_KEY = config("SENDGRID_API_KEY")
 
 
 class TestConfig(Config):
