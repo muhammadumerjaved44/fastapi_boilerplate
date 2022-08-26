@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 from db.session import get_db
 from models import User
 from schemas import UserSchema, Users, AddUser, UserUpdateSchema
-from auth import get_current_active_user, get_password_hash
+from .auth import get_current_active_user, get_password_hash
 
 router = APIRouter()
 
 
 @router.get("/{id}", response_model=UserSchema)
-def userById(
+def show(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
@@ -24,7 +24,7 @@ def userById(
         HTTPException: 404, user not found
 
     Returns:
-        _type_: instant user by id 
+        _type_: instant user by id
     """
     user = session.query(User).get(id)
     if user is None:
@@ -36,7 +36,7 @@ def userById(
 @router.get(
     "/", response_model=Users,
 )
-def userList(
+def users(
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
@@ -55,15 +55,14 @@ def userList(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def addUser(
+def create(
     user: AddUser,
     session: Session = Depends(get_db),
-    current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
     """for adding new user
 
     Args:
-        user (AddUser): user schema 
+        user (AddUser): user schema
         session (Session, optional):  database connection
         current_user (User, optional): for authentication and authorization
 
@@ -76,7 +75,14 @@ def addUser(
     try:
         password = get_password_hash(user.password)
         user.password = password
-        userObj = User(**user.dict())
+        userObj = User(
+                    email = user.username,
+                    password = user.password,
+                    first_name = user.first_name,
+                    last_name = user.last_name,
+                    is_active = user.is_active,
+                    scope = user.scope,
+                       )
         session.add(userObj)
         session.commit()
         session.refresh(userObj)
@@ -86,13 +92,13 @@ def addUser(
 
 
 @router.put("/{id}")
-def updateUser(
+def update(
     id: int,
     user: UserUpdateSchema,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
 ):
-    """update 
+    """update
 
     Args:
         id (int): take id for updating user
@@ -114,7 +120,7 @@ def updateUser(
 
 
 @router.delete("/{id}")
-def deleteUser(
+def delete(
     id: int,
     session: Session = Depends(get_db),
     current_user: User = Security(get_current_active_user, scopes=["superuser"]),
@@ -126,7 +132,7 @@ def deleteUser(
         session (Session, optional): database connection
 
     Raises:
-        HTTPException: 404, user not found 
+        HTTPException: 404, user not found
 
     Returns:
         _type_: return deleted user name + deleted message
@@ -138,29 +144,3 @@ def deleteUser(
     session.commit()
     session.close
     return userObj.first_name + "  deleted"
-
-
-@router.get("/{id}/contacts")
-def get_user_contacts(
-    db: Session = Depends(get_db),
-    current_user: User = Security(get_current_active_user, scopes=["user"]),
-):
-    """get user contact
-
-    Args:
-        id (int): take id for instant user
-        db (Session, optional): database connection
-
-    Raises:
-        HTTPException: 404, user not found 
-
-    Returns:
-        _type_: user contacts
-    """
-    user = db.query(User).get(current_user.id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
-
-    return user.contacts

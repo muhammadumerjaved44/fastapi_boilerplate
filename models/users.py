@@ -14,4 +14,3 @@ class User(Base):
     last_name = Column(String(50))
     is_active = Column(Boolean, default=False)
     scope = Column(String(10))
-    contacts = relationship("Contact")
